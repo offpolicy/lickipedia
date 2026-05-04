@@ -1,6 +1,7 @@
 import { HashRouter, Routes, Route, Link } from 'react-router-dom'
 import { Editor } from './views/Editor'
 import { Library } from './views/Library'
+import { EditorProvider } from './state/EditorContext'
 
 export default function App() {
   return (
@@ -10,11 +11,13 @@ export default function App() {
           <Link to="/" className="font-bold">Lickipedia</Link>
           <Link to="/library" className="text-zinc-400 hover:text-zinc-100">Library</Link>
         </nav>
-        <Routes>
-          <Route path="/" element={<Editor />} />
-          <Route path="/library" element={<Library />} />
-          <Route path="/lick/:id" element={<Editor />} />
-        </Routes>
+        <EditorProvider>
+          <Routes>
+            <Route path="/" element={<Editor />} />
+            <Route path="/library" element={<Library />} />
+            <Route path="/lick/:id" element={<Editor />} />
+          </Routes>
+        </EditorProvider>
       </div>
     </HashRouter>
   )
