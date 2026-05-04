@@ -1,4 +1,5 @@
 import type { Grid } from './grid'
+import { totalCells } from './grid'
 
 export type Drum =
   | 'crash' | 'ride'
@@ -81,4 +82,16 @@ export function setOrnament(lick: Lick, drum: Drum, step: number, ornament: Orna
   const key = hitKey(drum, step)
   if (!lick.hits[key]) return lick
   return touch({ ...lick, hits: { ...lick.hits, [key]: { ...lick.hits[key], ornament } } })
+}
+
+export function resizeGrid(lick: Lick, grid: Grid): { lick: Lick; discarded: number } {
+  const max = totalCells(grid)
+  const hits: Record<string, Hit> = {}
+  let discarded = 0
+  for (const [key, hit] of Object.entries(lick.hits)) {
+    const step = Number(key.split(':')[1])
+    if (step < max) hits[key] = hit
+    else discarded++
+  }
+  return { lick: touch({ ...lick, grid, hits }), discarded }
 }

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { newLick, toggleHit, setAccent, setOrnament, hitKey } from './lick'
+import { newLick, toggleHit, setAccent, setOrnament, hitKey, resizeGrid } from './lick'
+import { totalCells } from './grid'
 
 describe('lick mutations', () => {
   it('newLick has empty hits and a name', () => {
@@ -39,5 +40,27 @@ describe('lick mutations', () => {
     await new Promise((r) => setTimeout(r, 5))
     const after = toggleHit(lick, 'kick', 0)
     expect(after.updatedAt > lick.updatedAt).toBe(true)
+  })
+})
+
+describe('resizeGrid', () => {
+  it('discards hits whose step no longer exists', () => {
+    let lick = newLick()
+    // grid has 32 cells; add a hit at step 31
+    lick = toggleHit(lick, 'snare', 31)
+    const newGrid = { ...lick.grid, bars: 1 }  // halves to 16 cells
+    const { lick: shrunk, discarded } = resizeGrid(lick, newGrid)
+    expect(totalCells(shrunk.grid)).toBe(16)
+    expect(shrunk.hits[hitKey('snare', 31)]).toBeUndefined()
+    expect(discarded).toBe(1)
+  })
+
+  it('keeps hits within range when growing', () => {
+    let lick = newLick()
+    lick = toggleHit(lick, 'kick', 0)
+    const newGrid = { ...lick.grid, bars: 4 }
+    const { lick: grown, discarded } = resizeGrid(lick, newGrid)
+    expect(grown.hits[hitKey('kick', 0)]).toBeDefined()
+    expect(discarded).toBe(0)
   })
 })
