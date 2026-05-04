@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react'
 import type { Drum, Hit } from '../grid/lick'
 
-export function Cell({ drum, step, hit, onClick, onLongPress }: {
+export function Cell({ drum, step, hit, onPointerDown, onPointerEnter, onLongPress }: {
   drum: Drum
   step: number
   hit?: Hit
-  onClick: () => void
+  onPointerDown: () => void
+  onPointerEnter: () => void
   onLongPress: () => void
 }) {
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -14,11 +15,15 @@ export function Cell({ drum, step, hit, onClick, onLongPress }: {
       if (pressTimer.current) clearTimeout(pressTimer.current)
     }
   }, [])
-  const onPointerDown = () => {
+  const handlePointerDown = () => {
     pressTimer.current = setTimeout(() => { pressTimer.current = null; onLongPress() }, 450)
+    onPointerDown()
   }
-  const onPointerUp = () => {
-    if (pressTimer.current) { clearTimeout(pressTimer.current); pressTimer.current = null; onClick() }
+  const handlePointerEnter = () => {
+    onPointerEnter()
+  }
+  const handlePointerUp = () => {
+    if (pressTimer.current) { clearTimeout(pressTimer.current); pressTimer.current = null }
   }
   const cancelPress = () => {
     if (pressTimer.current) { clearTimeout(pressTimer.current); pressTimer.current = null }
@@ -31,8 +36,9 @@ export function Cell({ drum, step, hit, onClick, onLongPress }: {
       type="button"
       aria-label={`${drum} step ${step + 1}${hit ? ' (active)' : ''}`}
       aria-pressed={!!hit}
-      onPointerDown={onPointerDown}
-      onPointerUp={onPointerUp}
+      onPointerDown={handlePointerDown}
+      onPointerEnter={handlePointerEnter}
+      onPointerUp={handlePointerUp}
       onPointerLeave={cancelPress}
       onPointerCancel={cancelPress}
       onContextMenu={(e) => { e.preventDefault(); onLongPress() }}

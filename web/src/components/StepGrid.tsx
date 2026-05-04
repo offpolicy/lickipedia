@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useEditor } from '../state/EditorContext'
 import { DRUMS, hitKey, type Drum } from '../grid/lick'
 import { totalCells } from '../grid/grid'
@@ -11,6 +12,29 @@ export function StepGrid({ onCellLongPress }: {
   const cells = totalCells(lick.grid)
   const stepIndices = Array.from({ length: cells }, (_, i) => i)
   const cellsPerBeat = lick.grid.subdivision
+
+  const paintModeRef = useRef<null | 'fill' | 'clear'>(null)
+
+  const applyPaint = (drum: Drum, step: number) => {
+    const has = !!lick.hits[hitKey(drum, step)]
+    if (paintModeRef.current === 'fill' && !has) dispatch({ type: 'toggle-hit', drum, step })
+    if (paintModeRef.current === 'clear' && has) dispatch({ type: 'toggle-hit', drum, step })
+  }
+  const onCellPointerDown = (drum: Drum, step: number) => {
+    const has = !!lick.hits[hitKey(drum, step)]
+    paintModeRef.current = has ? 'clear' : 'fill'
+    applyPaint(drum, step)
+  }
+  const onCellPointerEnter = (drum: Drum, step: number) => {
+    if (!paintModeRef.current) return
+    applyPaint(drum, step)
+  }
+  useEffect(() => {
+    const up = () => { paintModeRef.current = null }
+    window.addEventListener('pointerup', up)
+    return () => window.removeEventListener('pointerup', up)
+  }, [])
+
   return (
     <div className="overflow-x-auto">
       <div className="inline-grid" style={{ gridTemplateColumns: `120px repeat(${cells}, 44px)` }}>
@@ -40,7 +64,8 @@ export function StepGrid({ onCellLongPress }: {
               drum={drum}
               step={s}
               hit={lick.hits[hitKey(drum, s)]}
-              onClick={() => dispatch({ type: 'toggle-hit', drum, step: s })}
+              onPointerDown={() => onCellPointerDown(drum, s)}
+              onPointerEnter={() => onCellPointerEnter(drum, s)}
               onLongPress={() => onCellLongPress(drum, s)}
             />
           </div>
