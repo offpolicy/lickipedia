@@ -37,4 +37,9 @@ describe('lp1 codec', () => {
   it('rejects malformed body', () => {
     expect(() => decodeLick('lp1:!!!notbase64')).toThrow()
   })
+
+  it('rejects valid envelope with foreign body shape', () => {
+    const foreign = encodeLick({ version: 99, weird: true } as unknown as never)
+    expect(() => decodeLick(foreign)).toThrow()
+  })
 })

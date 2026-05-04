@@ -17,6 +17,25 @@ function b64urlDecode(s: string): Uint8Array {
   return out
 }
 
+function isLickShape(v: unknown): v is Lick {
+  if (typeof v !== 'object' || v === null) return false
+  const o = v as Record<string, unknown>
+  if (typeof o.id !== 'string') return false
+  if (typeof o.name !== 'string') return false
+  if (typeof o.bpm !== 'number') return false
+  if (typeof o.kit !== 'string') return false
+  if (typeof o.hits !== 'object' || o.hits === null) return false
+  const grid = o.grid as Record<string, unknown> | null
+  if (!grid || typeof grid !== 'object') return false
+  if (typeof grid.bars !== 'number') return false
+  if (typeof grid.subdivision !== 'number') return false
+  const ts = grid.timeSig as Record<string, unknown> | null
+  if (!ts || typeof ts !== 'object') return false
+  if (typeof ts.beats !== 'number') return false
+  if (typeof ts.unit !== 'number') return false
+  return true
+}
+
 export function encodeLick(lick: Lick): string {
   const json = JSON.stringify(lick)
   const compressed = deflateSync(strToU8(json))
@@ -28,7 +47,9 @@ export function decodeLick(s: string): Lick {
   try {
     const bytes = b64urlDecode(s.slice(PREFIX.length))
     const json = strFromU8(inflateSync(bytes))
-    return JSON.parse(json) as Lick
+    const parsed: unknown = JSON.parse(json)
+    if (!isLickShape(parsed)) throw new Error('Malformed lp1 string')
+    return parsed
   } catch {
     throw new Error('Malformed lp1 string')
   }
