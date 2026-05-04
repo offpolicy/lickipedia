@@ -1,17 +1,26 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useEditor } from '../state/EditorContext'
-import { ensureStarted, play, stop } from '../audio/engine'
+
+// Cache the dynamically-imported engine module so subsequent plays/stops use the same instance.
+let enginePromise: Promise<typeof import('../audio/engine')> | null = null
+function loadEngine() {
+  if (!enginePromise) enginePromise = import('../audio/engine')
+  return enginePromise
+}
 
 export function Transport() {
   const { state, dispatch } = useEditor()
   const [loading, setLoading] = useState(false)
+  const stateRef = useRef(state)
+  useEffect(() => { stateRef.current = state }, [state])
 
   const onPlay = async () => {
     if (loading) return
     setLoading(true)
     try {
-      await ensureStarted('acoustic', import.meta.env.BASE_URL)
-      play(state.lick, { countIn: state.countIn })
+      const eng = await loadEngine()
+      await eng.ensureStarted('acoustic', import.meta.env.BASE_URL)
+      eng.play(stateRef.current.lick, { countIn: stateRef.current.countIn })
       dispatch({ type: 'set-playing', playing: true })
     } catch (err) {
       console.error('Failed to start audio:', err)
@@ -19,10 +28,13 @@ export function Transport() {
       setLoading(false)
     }
   }
-  const onStop = () => {
-    stop()
+
+  const onStop = async () => {
+    const eng = await loadEngine()
+    eng.stop()
     dispatch({ type: 'set-playing', playing: false })
   }
+
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 flex justify-center gap-3 border-t border-zinc-800 bg-zinc-950/95 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur">
       {state.isPlaying
