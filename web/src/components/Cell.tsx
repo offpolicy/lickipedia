@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import type React from 'react'
 import type { Drum, Hit } from '../grid/lick'
 
 export function Cell({ drum, step, hit, onPointerDown, onPointerEnter, onLongPress }: {
@@ -15,7 +16,10 @@ export function Cell({ drum, step, hit, onPointerDown, onPointerEnter, onLongPre
       if (pressTimer.current) clearTimeout(pressTimer.current)
     }
   }, [])
-  const handlePointerDown = () => {
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType === 'touch') {
+      (e.target as Element).releasePointerCapture(e.pointerId)
+    }
     pressTimer.current = setTimeout(() => { pressTimer.current = null; onLongPress() }, 450)
     onPointerDown()
   }
@@ -43,7 +47,7 @@ export function Cell({ drum, step, hit, onPointerDown, onPointerEnter, onLongPre
       onPointerCancel={cancelPress}
       onContextMenu={(e) => { e.preventDefault(); onLongPress() }}
       className={`
-        relative h-11 min-w-[44px] w-full rounded-sm border border-zinc-800 transition-colors
+        relative h-11 min-w-[44px] w-full rounded-sm border border-zinc-800 transition-colors touch-none
         ${isHit ? 'bg-amber-400 hover:bg-amber-300' : 'bg-zinc-900 hover:bg-zinc-800'}
       `}
     >
