@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import type React from 'react'
 import { useEditor } from '../state/EditorContext'
 import { DRUMS, hitKey, type Drum } from '../grid/lick'
 import { totalCells } from '../grid/grid'
@@ -14,26 +15,73 @@ export function StepGrid({ onCellLongPress }: {
   const cellsPerBeat = lick.grid.subdivision
 
   const paintModeRef = useRef<null | 'fill' | 'clear'>(null)
+  const pendingCellRef = useRef<{ drum: Drum; step: number } | null>(null)
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const movedRef = useRef(false)
+
+  const cancelLongPress = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
+    }
+  }
 
   const applyPaint = (drum: Drum, step: number) => {
     const has = !!lick.hits[hitKey(drum, step)]
     if (paintModeRef.current === 'fill' && !has) dispatch({ type: 'toggle-hit', drum, step })
     if (paintModeRef.current === 'clear' && has) dispatch({ type: 'toggle-hit', drum, step })
   }
-  const onCellPointerDown = (drum: Drum, step: number) => {
-    const has = !!lick.hits[hitKey(drum, step)]
-    paintModeRef.current = has ? 'clear' : 'fill'
-    applyPaint(drum, step)
+
+  const onCellPointerDown = (drum: Drum, step: number, e: React.PointerEvent) => {
+    if (e.pointerType === 'touch') {
+      (e.target as Element).releasePointerCapture(e.pointerId)
+    }
+    pendingCellRef.current = { drum, step }
+    movedRef.current = false
+    paintModeRef.current = null
+    cancelLongPress()
+    longPressTimerRef.current = setTimeout(() => {
+      longPressTimerRef.current = null
+      if (pendingCellRef.current && !movedRef.current) {
+        const { drum: d, step: s } = pendingCellRef.current
+        onCellLongPress(d, s)
+        pendingCellRef.current = null
+      }
+    }, 450)
   }
+
   const onCellPointerEnter = (drum: Drum, step: number) => {
-    if (!paintModeRef.current) return
-    applyPaint(drum, step)
+    if (pendingCellRef.current) {
+      const pc = pendingCellRef.current
+      const isSame = pc.drum === drum && pc.step === step
+      if (!isSame) {
+        cancelLongPress()
+        movedRef.current = true
+        const has = !!lick.hits[hitKey(pc.drum, pc.step)]
+        paintModeRef.current = has ? 'clear' : 'fill'
+        applyPaint(pc.drum, pc.step)
+        applyPaint(drum, step)
+        pendingCellRef.current = null
+      }
+    } else if (paintModeRef.current) {
+      applyPaint(drum, step)
+    }
   }
+
   useEffect(() => {
-    const up = () => { paintModeRef.current = null }
+    const up = () => {
+      cancelLongPress()
+      if (pendingCellRef.current && !movedRef.current) {
+        const { drum, step } = pendingCellRef.current
+        dispatch({ type: 'toggle-hit', drum, step })
+      }
+      pendingCellRef.current = null
+      paintModeRef.current = null
+      movedRef.current = false
+    }
     window.addEventListener('pointerup', up)
     return () => window.removeEventListener('pointerup', up)
-  }, [])
+  }, [dispatch])
 
   return (
     <div className="overflow-x-auto">
@@ -64,9 +112,8 @@ export function StepGrid({ onCellLongPress }: {
               drum={drum}
               step={s}
               hit={lick.hits[hitKey(drum, s)]}
-              onPointerDown={() => onCellPointerDown(drum, s)}
+              onPointerDown={(e) => onCellPointerDown(drum, s, e)}
               onPointerEnter={() => onCellPointerEnter(drum, s)}
-              onLongPress={() => onCellLongPress(drum, s)}
             />
           </div>
         ))}
