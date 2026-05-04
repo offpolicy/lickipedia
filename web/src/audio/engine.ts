@@ -11,6 +11,11 @@ let stopRequested = false
 let loopTimeout: ReturnType<typeof setTimeout> | null = null
 let clickSynth: Tone.Synth | null = null
 
+type PlayheadCb = (t0: number, loopLen: number) => void
+let playheadCb: PlayheadCb | null = null
+export function onLoopStart(cb: PlayheadCb | null): void { playheadCb = cb }
+export function now(): number { return Tone.now() }
+
 function ensureClick(): Tone.Synth {
   if (!clickSynth) {
     clickSynth = new Tone.Synth({
@@ -44,6 +49,7 @@ function scheduleLoop(lick: Lick, t0: number): void {
   if (!players || stopRequested) return
   const sched = buildSchedule(lick)
   const loopLen = loopSeconds(lick.grid, lick.bpm)
+  playheadCb?.(t0, loopLen)
   for (const ev of sched) {
     if (ev.time < 0 || ev.time >= loopLen) continue
     const player = players.player(ev.drum)
