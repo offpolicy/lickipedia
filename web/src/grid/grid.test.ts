@@ -7,8 +7,7 @@ describe('grid math', () => {
   })
 
   it('totalCells: 7/8 in 8ths over 1 bar = 7', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(totalCells({ bars: 1, timeSig: { beats: 7, unit: 8 }, subdivision: 1 } as any)).toBe(7)
+    expect(totalCells({ bars: 1, timeSig: { beats: 7, unit: 8 }, subdivision: 1 })).toBe(7)
   })
 
   it('totalCells: 6/8 in triplets over 1 bar = 18', () => {
