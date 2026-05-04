@@ -20,7 +20,7 @@ export function Cell({ drum, step, hit, onPointerDown, onPointerEnter }: {
       onPointerEnter={onPointerEnter}
       className={`
         relative h-11 min-w-[44px] w-full rounded-sm border border-zinc-800 transition-colors touch-none
-        ${isHit ? 'bg-amber-400 hover:bg-amber-300' : 'bg-zinc-900 hover:bg-zinc-800'}
+        ${isHit ? 'bg-amber-400 hover:bg-amber-300 active:bg-amber-500' : 'bg-zinc-900 hover:bg-zinc-800 active:bg-zinc-700'}
       `}
     >
       {isAccent && <span className="absolute top-0.5 left-1 h-1.5 w-1.5 rounded-full bg-zinc-900" />}

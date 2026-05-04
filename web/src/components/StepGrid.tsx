@@ -80,7 +80,12 @@ export function StepGrid({ onCellLongPress }: {
       movedRef.current = false
     }
     window.addEventListener('pointerup', up)
-    return () => window.removeEventListener('pointerup', up)
+    window.addEventListener('pointercancel', up)
+    return () => {
+      window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', up)
+      cancelLongPress()
+    }
   }, [dispatch])
 
   return (
