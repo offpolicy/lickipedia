@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { StepGrid } from '../components/StepGrid'
+import { CellSheet } from '../components/CellSheet'
 import type { Drum } from '../grid/lick'
 
 export function Editor() {
@@ -7,7 +8,13 @@ export function Editor() {
   return (
     <div className="p-4">
       <StepGrid onCellLongPress={(drum, step) => setActiveCell({ drum, step })} />
-      {activeCell && <div className="mt-4 text-sm text-zinc-400">long-press: {activeCell.drum}:{activeCell.step}</div>}
+      {activeCell && (
+        <CellSheet
+          drum={activeCell.drum}
+          step={activeCell.step}
+          onClose={() => setActiveCell(null)}
+        />
+      )}
     </div>
   )
 }
