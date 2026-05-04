@@ -22,12 +22,13 @@ type Action =
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
-    case 'load': return { ...state, lick: action.lick }
+    case 'load': return { ...state, lick: action.lick, isPlaying: false }
     case 'toggle-hit': return { ...state, lick: toggleHit(state.lick, action.drum, action.step) }
     case 'set-accent': return { ...state, lick: setAccent(state.lick, action.drum, action.step, action.accent) }
     case 'set-ornament': return { ...state, lick: setOrnament(state.lick, action.drum, action.step, action.ornament) }
     case 'set-bpm': return { ...state, lick: { ...state.lick, bpm: action.bpm, updatedAt: new Date().toISOString() } }
     case 'set-name': return { ...state, lick: { ...state.lick, name: action.name, updatedAt: new Date().toISOString() } }
+    // Caller is responsible for confirm-on-shrink; see Toolbar.tryResize.
     case 'resize-grid': return { ...state, lick: resizeGrid(state.lick, action.grid).lick }
     case 'set-playing': return { ...state, isPlaying: action.playing }
     case 'set-count-in': return { ...state, countIn: action.countIn }
