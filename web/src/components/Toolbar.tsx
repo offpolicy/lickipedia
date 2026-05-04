@@ -26,6 +26,8 @@ export function Toolbar() {
   return (
     <div className="flex flex-wrap items-center gap-3 p-3 bg-zinc-900 border-b border-zinc-800">
       <input
+        aria-label="Lick name"
+        maxLength={120}
         value={lick.name}
         onChange={(e) => dispatch({ type: 'set-name', name: e.target.value })}
         className="bg-transparent border-b border-zinc-700 px-1 text-lg font-semibold focus:outline-none focus:border-amber-400"
@@ -34,7 +36,11 @@ export function Toolbar() {
         BPM
         <input
           type="number" min={40} max={240} value={lick.bpm}
-          onChange={(e) => dispatch({ type: 'set-bpm', bpm: Number(e.target.value) })}
+          onChange={(e) => {
+            const n = e.target.valueAsNumber
+            if (!Number.isFinite(n)) return
+            dispatch({ type: 'set-bpm', bpm: Math.max(40, Math.min(240, n)) })
+          }}
           className="w-16 bg-zinc-800 px-2 py-1 rounded"
         />
       </label>
@@ -42,7 +48,11 @@ export function Toolbar() {
         Time
         <input
           type="number" min={1} max={15} value={lick.grid.timeSig.beats}
-          onChange={(e) => tryResize({ ...lick.grid, timeSig: { ...lick.grid.timeSig, beats: Number(e.target.value) } })}
+          onChange={(e) => {
+            const n = e.target.valueAsNumber
+            if (!Number.isFinite(n)) return
+            tryResize({ ...lick.grid, timeSig: { ...lick.grid.timeSig, beats: Math.max(1, Math.min(15, n)) } })
+          }}
           className="w-12 bg-zinc-800 px-2 py-1 rounded"
         />
         /
