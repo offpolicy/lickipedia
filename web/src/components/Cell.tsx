@@ -1,19 +1,26 @@
-import { useRef } from 'react'
-import type { Hit } from '../grid/lick'
+import { useEffect, useRef } from 'react'
+import type { Drum, Hit } from '../grid/lick'
 
-export function Cell({ hit, onClick, onLongPress }: {
+export function Cell({ drum, step, hit, onClick, onLongPress }: {
+  drum: Drum
+  step: number
   hit?: Hit
   onClick: () => void
   onLongPress: () => void
 }) {
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    return () => {
+      if (pressTimer.current) clearTimeout(pressTimer.current)
+    }
+  }, [])
   const onPointerDown = () => {
     pressTimer.current = setTimeout(() => { pressTimer.current = null; onLongPress() }, 450)
   }
   const onPointerUp = () => {
     if (pressTimer.current) { clearTimeout(pressTimer.current); pressTimer.current = null; onClick() }
   }
-  const onPointerLeave = () => {
+  const cancelPress = () => {
     if (pressTimer.current) { clearTimeout(pressTimer.current); pressTimer.current = null }
   }
   const isHit = !!hit
@@ -22,12 +29,15 @@ export function Cell({ hit, onClick, onLongPress }: {
   return (
     <button
       type="button"
+      aria-label={`${drum} step ${step + 1}${hit ? ' (active)' : ''}`}
+      aria-pressed={!!hit}
       onPointerDown={onPointerDown}
       onPointerUp={onPointerUp}
-      onPointerLeave={onPointerLeave}
+      onPointerLeave={cancelPress}
+      onPointerCancel={cancelPress}
       onContextMenu={(e) => { e.preventDefault(); onLongPress() }}
       className={`
-        relative h-11 min-w-[44px] rounded-sm border border-zinc-800 transition-colors
+        relative h-11 min-w-[44px] w-full rounded-sm border border-zinc-800 transition-colors
         ${isHit ? 'bg-amber-400 hover:bg-amber-300' : 'bg-zinc-900 hover:bg-zinc-800'}
       `}
     >

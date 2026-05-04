@@ -35,8 +35,10 @@ export function StepGrid({ onCellLongPress }: {
           {drum}
         </div>
         {stepIndices.map((s) => (
-          <div key={s} className={`p-0.5 ${s % cellsPerBeat === 0 ? 'border-l border-zinc-700' : ''}`}>
+          <div key={s} className={s % cellsPerBeat === 0 ? 'border-l border-zinc-700' : ''}>
             <Cell
+              drum={drum}
+              step={s}
               hit={lick.hits[hitKey(drum, s)]}
               onClick={() => dispatch({ type: 'toggle-hit', drum, step: s })}
               onLongPress={() => onCellLongPress(drum, s)}
